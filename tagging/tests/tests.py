@@ -901,7 +901,10 @@ class TestTagFieldInForms(TestCase):
         self.assertEquals(edit_string_for_tags([plain, spaces, comma]), u'plain, spa ces, "com,ma"')
         self.assertEquals(edit_string_for_tags([plain, comma]), u'plain "com,ma"')
         self.assertEquals(edit_string_for_tags([comma, spaces]), u'"com,ma", spa ces')
-    
+
+        # Regression test for #184
+        self.assertEquals(edit_string_for_tags([spaces], u'"spa ces"'))
+
     def test_tag_d_validation(self):
         t = TagField()
         self.assertEquals(t.clean('foo'), u'foo')

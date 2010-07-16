@@ -124,6 +124,9 @@ def edit_string_for_tags(tags):
         glue = u', '
     else:
         glue = u' '
+    # A single multi-word tag like 'spa ces' needs to be quoted.
+    if len(names) == 1 and ' ' in names[0]:
+        return u'"%s"' % names[0]
     return glue.join(names)
 
 def get_queryset_and_model(queryset_or_model):
