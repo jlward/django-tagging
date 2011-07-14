@@ -896,14 +896,16 @@ class TestTagFieldInForms(TestCase):
         plain = Tag.objects.create(name='plain')
         spaces = Tag.objects.create(name='spa ces')
         comma = Tag.objects.create(name='com,ma')
+        comma_and_space = Tag.objects.create(name='a b, c d e')
         self.assertEquals(edit_string_for_tags([plain]), u'plain')
         self.assertEquals(edit_string_for_tags([plain, spaces]), u'plain, spa ces')
         self.assertEquals(edit_string_for_tags([plain, spaces, comma]), u'plain, spa ces, "com,ma"')
         self.assertEquals(edit_string_for_tags([plain, comma]), u'plain "com,ma"')
         self.assertEquals(edit_string_for_tags([comma, spaces]), u'"com,ma", spa ces')
+        self.assertEquals(edit_string_for_tags([comma_and_space]), u'"a b, c d e"')
 
         # Regression test for #184
-        self.assertEquals(edit_string_for_tags([spaces], u'"spa ces"'))
+        self.assertEquals(edit_string_for_tags([spaces]), u'"spa ces"')
 
     def test_tag_d_validation(self):
         t = TagField()

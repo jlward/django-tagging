@@ -109,6 +109,7 @@ def edit_string_for_tags(tags):
     resulting string of tag names will be comma-delimited, otherwise
     it will be space-delimited.
     """
+    print tags
     names = []
     use_commas = False
     for tag in tags:
@@ -125,8 +126,9 @@ def edit_string_for_tags(tags):
     else:
         glue = u' '
     # A single multi-word tag like 'spa ces' needs to be quoted.
+    print names
     if len(names) == 1 and ' ' in names[0]:
-        return u'"%s"' % names[0]
+        return u'"%s"' % names[0].strip('"')
     return glue.join(names)
 
 def get_queryset_and_model(queryset_or_model):
