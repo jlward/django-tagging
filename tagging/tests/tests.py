@@ -888,6 +888,7 @@ class TestTagFieldInForms(TestCase):
         class TestForm(forms.ModelForm):
             class Meta:
                 model = FormTest
+                exclude = []
 
         form = TestForm()
         self.assertEquals(form.fields['tags'].__class__.__name__, 'TagField')
