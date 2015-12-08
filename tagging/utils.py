@@ -8,8 +8,7 @@ from django.db.models.query import QuerySet
 try:
     from django.utils.encoding import force_unicode
 except ImportError:
-    def force_unicode(s, *args, **kwargs):
-        return s
+    from django.utils.encoding import force_text as force_unicode
 from django.utils.translation import ugettext as _
 
 try:
