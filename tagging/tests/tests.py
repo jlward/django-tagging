@@ -4,7 +4,6 @@ from django import forms
 from django.db.models import Q
 from django.test import TestCase
 from tagging.forms import TagField
-from tagging import settings
 from tagging.models import Tag, TaggedItem
 from tagging.tests.models import Article, Link, Perch, Parrot, FormTest, FormTestNull
 from tagging.utils import calculate_cloud, edit_string_for_tags, get_tag_list, get_tag, parse_tag_input
@@ -136,10 +135,10 @@ class TestNormalisedTagListInput(TestCase):
     def test_with_invalid_input_mix_of_string_and_instance(self):
         try:
             get_tag_list(['cheese', self.toast])
-        except ValueError, ve:
+        except ValueError as ve:
             self.assertEquals(str(ve),
                 'If a list or tuple of tags is provided, they must all be tag names, Tag objects or Tag ids.')
-        except Exception, e:
+        except Exception as e:
             raise self.failureException('the wrong type of exception was raised: type [%s] value [%]' %\
                 (str(type(e)), str(e)))
         else:
@@ -148,9 +147,9 @@ class TestNormalisedTagListInput(TestCase):
     def test_with_invalid_input(self):
         try:
             get_tag_list(29)
-        except ValueError, ve:
+        except ValueError as ve:
             self.assertEquals(str(ve), 'The tag input given was invalid.')
-        except Exception, e:
+        except Exception as e:
             raise self.failureException('the wrong type of exception was raised: type [%s] value [%s]' %\
                 (str(type(e)), str(e)))
         else:
@@ -204,9 +203,9 @@ class TestCalculateCloud(TestCase):
     def test_invalid_distribution(self):
         try:
             calculate_cloud(self.tags, steps=5, distribution='cheese')
-        except ValueError, ve:
+        except ValueError as ve:
             self.assertEquals(str(ve), 'Invalid distribution algorithm specified: cheese.')
-        except Exception, e:
+        except Exception as e:
             raise self.failureException('the wrong type of exception was raised: type [%s] value [%s]' %\
                 (str(type(e)), str(e)))
         else:
@@ -272,9 +271,9 @@ class TestBasicTagging(TestCase):
 
         try:
             Tag.objects.add_tag(self.dead_parrot, '    ')
-        except AttributeError, ae:
+        except AttributeError as ae:
             self.assertEquals(str(ae), 'No tags were given: "    ".')
-        except Exception, e:
+        except Exception as e:
             raise self.failureException('the wrong type of exception was raised: type [%s] value [%s]' %\
                 (str(type(e)), str(e)))
         else:
@@ -291,9 +290,9 @@ class TestBasicTagging(TestCase):
 
         try:
             Tag.objects.add_tag(self.dead_parrot, 'one two')
-        except AttributeError, ae:
+        except AttributeError as ae:
             self.assertEquals(str(ae), 'Multiple tags were given: "one two".')
-        except Exception, e:
+        except Exception as e:
             raise self.failureException('the wrong type of exception was raised: type [%s] value [%s]' %\
                 (str(type(e)), str(e)))
         else:
@@ -391,18 +390,13 @@ class TestModelTagField(TestCase):
 
 class TestSettings(TestCase):
     def setUp(self):
-        self.original_force_lower_case_tags = settings.FORCE_LOWERCASE_TAGS
         self.dead_parrot = Parrot.objects.create(state='dead')
-
-    def tearDown(self):
-        settings.FORCE_LOWERCASE_TAGS = self.original_force_lower_case_tags
 
     def test_force_lowercase_tags(self):
         """ Test forcing tags to lowercase. """
 
-        settings.FORCE_LOWERCASE_TAGS = True
-
-        Tag.objects.update_tags(self.dead_parrot, 'foO bAr Ter')
+        with self.settings(FORCE_LOWERCASE_TAGS=True):
+            Tag.objects.update_tags(self.dead_parrot, 'foO bAr Ter')
         tags = Tag.objects.get_for_object(self.dead_parrot)
         self.assertEquals(len(tags), 3)
         foo_tag = get_tag('foo')
@@ -412,7 +406,8 @@ class TestSettings(TestCase):
         self.failUnless(bar_tag in tags)
         self.failUnless(ter_tag in tags)
 
-        Tag.objects.update_tags(self.dead_parrot, 'foO bAr baZ')
+        with self.settings(FORCE_LOWERCASE_TAGS=True):
+            Tag.objects.update_tags(self.dead_parrot, 'foO bAr baZ')
         tags = Tag.objects.get_for_object(self.dead_parrot)
         baz_tag = get_tag('baz')
         self.assertEquals(len(tags), 3)
@@ -420,14 +415,16 @@ class TestSettings(TestCase):
         self.failUnless(baz_tag in tags)
         self.failUnless(foo_tag in tags)
 
-        Tag.objects.add_tag(self.dead_parrot, 'FOO')
+        with self.settings(FORCE_LOWERCASE_TAGS=True):
+            Tag.objects.add_tag(self.dead_parrot, 'FOO')
         tags = Tag.objects.get_for_object(self.dead_parrot)
         self.assertEquals(len(tags), 3)
         self.failUnless(bar_tag in tags)
         self.failUnless(baz_tag in tags)
         self.failUnless(foo_tag in tags)
 
-        Tag.objects.add_tag(self.dead_parrot, 'Zip')
+        with self.settings(FORCE_LOWERCASE_TAGS=True):
+            Tag.objects.add_tag(self.dead_parrot, 'Zip')
         tags = Tag.objects.get_for_object(self.dead_parrot)
         self.assertEquals(len(tags), 4)
         zip_tag = get_tag('zip')
@@ -436,9 +433,10 @@ class TestSettings(TestCase):
         self.failUnless(foo_tag in tags)
         self.failUnless(zip_tag in tags)
 
-        f1 = FormTest.objects.create()
-        f1.tags = u'TEST5'
-        f1.save()
+        with self.settings(FORCE_LOWERCASE_TAGS=True):
+            f1 = FormTest.objects.create()
+            f1.tags = u'TEST5'
+            f1.save()
         tags = Tag.objects.get_for_object(f1)
         test5_tag = get_tag('test5')
         self.assertEquals(len(tags), 1)
@@ -888,6 +886,7 @@ class TestTagFieldInForms(TestCase):
         class TestForm(forms.ModelForm):
             class Meta:
                 model = FormTest
+                exclude = []
 
         form = TestForm()
         self.assertEquals(form.fields['tags'].__class__.__name__, 'TagField')
@@ -917,9 +916,9 @@ class TestTagFieldInForms(TestCase):
             u'foo qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvb bar')
         try:
             t.clean('foo qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbn bar')
-        except forms.ValidationError, ve:
-            self.assertEquals(str(ve), "[u'Each tag may be no more than 50 characters long.']")
-        except Exception, e:
+        except forms.ValidationError as ve:
+            self.assertEquals(ve.messages, ['Each tag may be no more than 50 characters long.'])
+        except Exception as e:
             raise e
         else:
             raise self.failureException('a ValidationError exception was supposed to have been raised.')

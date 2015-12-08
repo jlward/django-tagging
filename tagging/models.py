@@ -9,11 +9,13 @@ except NameError:
 
 from django.contrib.contenttypes import generic
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
+
 from django.db import connection, models
 from django.db.models.query import QuerySet
 from django.utils.translation import ugettext_lazy as _
 
-from tagging import settings
+from tagging.settings import DEFAULT_FORCE_LOWERCASE_TAGS
 from tagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model, parse_tag_input
 from tagging.utils import LOGARITHMIC
 
@@ -32,7 +34,7 @@ class TagManager(models.Manager):
         current_tags = list(self.filter(items__content_type__pk=ctype.pk,
                                         items__object_id=obj.pk))
         updated_tag_names = parse_tag_input(tag_names)
-        if settings.FORCE_LOWERCASE_TAGS:
+        if getattr(settings, 'FORCE_LOWERCASE_TAGS', DEFAULT_FORCE_LOWERCASE_TAGS):
             updated_tag_names = [t.lower() for t in updated_tag_names]
 
         # Remove tags which no longer apply
@@ -59,7 +61,7 @@ class TagManager(models.Manager):
         if len(tag_names) > 1:
             raise AttributeError(_('Multiple tags were given: "%s".') % tag_name)
         tag_name = tag_names[0]
-        if settings.FORCE_LOWERCASE_TAGS:
+        if getattr(settings, 'FORCE_LOWERCASE_TAGS', DEFAULT_FORCE_LOWERCASE_TAGS):
             tag_name = tag_name.lower()
         tag, created = self.get_or_create(name=tag_name)
         ctype = ContentType.objects.get_for_model(obj)
@@ -165,10 +167,13 @@ class TagManager(models.Manager):
         if getattr(queryset.query, 'get_compiler', None):
             # Django 1.2+
             compiler = queryset.query.get_compiler(using='default')
+            if getattr(compiler, 'compile', None):
+                where, params = compiler.compile(queryset.query.where)
+            else:
+                where, params = queryset.query.where.as_sql(
+                    compiler.quote_name_unless_alias, compiler.connection
+                )
             extra_joins = ' '.join(compiler.get_from_clause()[0][1:])
-            where, params = queryset.query.where.as_sql(
-                compiler.quote_name_unless_alias, compiler.connection
-            )
         else:
             # Django pre-1.2
             extra_joins = ' '.join(queryset.query.get_from_clause()[0][1:])
