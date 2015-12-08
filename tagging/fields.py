@@ -1,11 +1,12 @@
 """
 A custom Model Field for tagging.
 """
+from django.conf import settings
 from django.db.models import signals
 from django.db.models.fields import CharField
 from django.utils.translation import ugettext_lazy as _
 
-from tagging import settings
+from tagging.settings import DEFAULT_FORCE_LOWERCASE_TAGS
 from tagging.models import Tag
 from tagging.utils import edit_string_for_tags
 
@@ -64,7 +65,7 @@ class TagField(CharField):
         """
         if instance is None:
             raise AttributeError(_('%s can only be set on instances.') % self.name)
-        if settings.FORCE_LOWERCASE_TAGS and value is not None:
+        if getattr(settings, 'FORCE_LOWERCASE_TAGS', DEFAULT_FORCE_LOWERCASE_TAGS) and value is not None:
             value = value.lower()
         self._set_instance_tag_cache(instance, value)
 

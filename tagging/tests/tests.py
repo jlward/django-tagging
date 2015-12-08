@@ -390,21 +390,13 @@ class TestModelTagField(TestCase):
 
 class TestSettings(TestCase):
     def setUp(self):
-        from tagging import settings
-        self.original_force_lower_case_tags = settings.FORCE_LOWERCASE_TAGS
         self.dead_parrot = Parrot.objects.create(state='dead')
-
-    def tearDown(self):
-        from tagging import settings
-        settings.FORCE_LOWERCASE_TAGS = self.original_force_lower_case_tags
 
     def test_force_lowercase_tags(self):
         """ Test forcing tags to lowercase. """
 
-        from tagging import settings
-        settings.FORCE_LOWERCASE_TAGS = True
-
-        Tag.objects.update_tags(self.dead_parrot, 'foO bAr Ter')
+        with self.settings(FORCE_LOWERCASE_TAGS=True):
+            Tag.objects.update_tags(self.dead_parrot, 'foO bAr Ter')
         tags = Tag.objects.get_for_object(self.dead_parrot)
         self.assertEquals(len(tags), 3)
         foo_tag = get_tag('foo')
@@ -414,7 +406,8 @@ class TestSettings(TestCase):
         self.failUnless(bar_tag in tags)
         self.failUnless(ter_tag in tags)
 
-        Tag.objects.update_tags(self.dead_parrot, 'foO bAr baZ')
+        with self.settings(FORCE_LOWERCASE_TAGS=True):
+            Tag.objects.update_tags(self.dead_parrot, 'foO bAr baZ')
         tags = Tag.objects.get_for_object(self.dead_parrot)
         baz_tag = get_tag('baz')
         self.assertEquals(len(tags), 3)
@@ -422,14 +415,16 @@ class TestSettings(TestCase):
         self.failUnless(baz_tag in tags)
         self.failUnless(foo_tag in tags)
 
-        Tag.objects.add_tag(self.dead_parrot, 'FOO')
+        with self.settings(FORCE_LOWERCASE_TAGS=True):
+            Tag.objects.add_tag(self.dead_parrot, 'FOO')
         tags = Tag.objects.get_for_object(self.dead_parrot)
         self.assertEquals(len(tags), 3)
         self.failUnless(bar_tag in tags)
         self.failUnless(baz_tag in tags)
         self.failUnless(foo_tag in tags)
 
-        Tag.objects.add_tag(self.dead_parrot, 'Zip')
+        with self.settings(FORCE_LOWERCASE_TAGS=True):
+            Tag.objects.add_tag(self.dead_parrot, 'Zip')
         tags = Tag.objects.get_for_object(self.dead_parrot)
         self.assertEquals(len(tags), 4)
         zip_tag = get_tag('zip')
@@ -438,9 +433,10 @@ class TestSettings(TestCase):
         self.failUnless(foo_tag in tags)
         self.failUnless(zip_tag in tags)
 
-        f1 = FormTest.objects.create()
-        f1.tags = u'TEST5'
-        f1.save()
+        with self.settings(FORCE_LOWERCASE_TAGS=True):
+            f1 = FormTest.objects.create()
+            f1.tags = u'TEST5'
+            f1.save()
         tags = Tag.objects.get_for_object(f1)
         test5_tag = get_tag('test5')
         self.assertEquals(len(tags), 1)
