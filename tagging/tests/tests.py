@@ -136,10 +136,10 @@ class TestNormalisedTagListInput(TestCase):
     def test_with_invalid_input_mix_of_string_and_instance(self):
         try:
             get_tag_list(['cheese', self.toast])
-        except ValueError, ve:
+        except ValueError as ve:
             self.assertEquals(str(ve),
                 'If a list or tuple of tags is provided, they must all be tag names, Tag objects or Tag ids.')
-        except Exception, e:
+        except Exception as e:
             raise self.failureException('the wrong type of exception was raised: type [%s] value [%]' %\
                 (str(type(e)), str(e)))
         else:
@@ -148,9 +148,9 @@ class TestNormalisedTagListInput(TestCase):
     def test_with_invalid_input(self):
         try:
             get_tag_list(29)
-        except ValueError, ve:
+        except ValueError as ve:
             self.assertEquals(str(ve), 'The tag input given was invalid.')
-        except Exception, e:
+        except Exception as e:
             raise self.failureException('the wrong type of exception was raised: type [%s] value [%s]' %\
                 (str(type(e)), str(e)))
         else:
@@ -204,9 +204,9 @@ class TestCalculateCloud(TestCase):
     def test_invalid_distribution(self):
         try:
             calculate_cloud(self.tags, steps=5, distribution='cheese')
-        except ValueError, ve:
+        except ValueError as ve:
             self.assertEquals(str(ve), 'Invalid distribution algorithm specified: cheese.')
-        except Exception, e:
+        except Exception as e:
             raise self.failureException('the wrong type of exception was raised: type [%s] value [%s]' %\
                 (str(type(e)), str(e)))
         else:
@@ -272,9 +272,9 @@ class TestBasicTagging(TestCase):
 
         try:
             Tag.objects.add_tag(self.dead_parrot, '    ')
-        except AttributeError, ae:
+        except AttributeError as ae:
             self.assertEquals(str(ae), 'No tags were given: "    ".')
-        except Exception, e:
+        except Exception as e:
             raise self.failureException('the wrong type of exception was raised: type [%s] value [%s]' %\
                 (str(type(e)), str(e)))
         else:
@@ -291,9 +291,9 @@ class TestBasicTagging(TestCase):
 
         try:
             Tag.objects.add_tag(self.dead_parrot, 'one two')
-        except AttributeError, ae:
+        except AttributeError as ae:
             self.assertEquals(str(ae), 'Multiple tags were given: "one two".')
-        except Exception, e:
+        except Exception as e:
             raise self.failureException('the wrong type of exception was raised: type [%s] value [%s]' %\
                 (str(type(e)), str(e)))
         else:
@@ -917,9 +917,9 @@ class TestTagFieldInForms(TestCase):
             u'foo qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvb bar')
         try:
             t.clean('foo qwertyuiopasdfghjklzxcvbnmqwertyuiopasdfghjklzxcvbn bar')
-        except forms.ValidationError, ve:
+        except forms.ValidationError as ve:
             self.assertEquals(str(ve), "[u'Each tag may be no more than 50 characters long.']")
-        except Exception, e:
+        except Exception as e:
             raise e
         else:
             raise self.failureException('a ValidationError exception was supposed to have been raised.')

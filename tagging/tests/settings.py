@@ -10,6 +10,7 @@ DATABASES = {
     },
 }
 
+SECRET_KEY = 'tagging'
 
 INSTALLED_APPS = (
     'django.contrib.contenttypes',
