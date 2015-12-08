@@ -4,7 +4,6 @@ Tagging components for Django's form library.
 from django import forms
 from django.utils.translation import ugettext as _
 
-from tagging import settings
 from tagging.models import Tag
 from tagging.utils import parse_tag_input
 
@@ -14,6 +13,7 @@ class TagAdminForm(forms.ModelForm):
         exclude = []
 
     def clean_name(self):
+        from tagging import settings
         value = self.cleaned_data['name']
         tag_names = parse_tag_input(value)
         if len(tag_names) > 1:
@@ -30,6 +30,7 @@ class TagField(forms.CharField):
     tag names.
     """
     def clean(self, value):
+        from tagging import settings
         value = super(TagField, self).clean(value)
         if value == u'':
             return value

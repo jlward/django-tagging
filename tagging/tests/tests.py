@@ -4,7 +4,6 @@ from django import forms
 from django.db.models import Q
 from django.test import TestCase
 from tagging.forms import TagField
-from tagging import settings
 from tagging.models import Tag, TaggedItem
 from tagging.tests.models import Article, Link, Perch, Parrot, FormTest, FormTestNull
 from tagging.utils import calculate_cloud, edit_string_for_tags, get_tag_list, get_tag, parse_tag_input
@@ -391,15 +390,18 @@ class TestModelTagField(TestCase):
 
 class TestSettings(TestCase):
     def setUp(self):
+        from tagging import settings
         self.original_force_lower_case_tags = settings.FORCE_LOWERCASE_TAGS
         self.dead_parrot = Parrot.objects.create(state='dead')
 
     def tearDown(self):
+        from tagging import settings
         settings.FORCE_LOWERCASE_TAGS = self.original_force_lower_case_tags
 
     def test_force_lowercase_tags(self):
         """ Test forcing tags to lowercase. """
 
+        from tagging import settings
         settings.FORCE_LOWERCASE_TAGS = True
 
         Tag.objects.update_tags(self.dead_parrot, 'foO bAr Ter')
