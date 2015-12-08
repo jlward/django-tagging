@@ -16,4 +16,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'tagging',
     'tagging.tests',
+    'django_nose',
 )
+
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
