@@ -3,11 +3,24 @@ Tagging utilities - from user tag input parsing to tag cloud
 calculation.
 """
 import math
-import types
 
 from django.db.models.query import QuerySet
-from django.utils.encoding import force_unicode
+try:
+    from django.utils.encoding import force_unicode
+except ImportError:
+    def force_unicode(s, *args, **kwargs):
+        return s
 from django.utils.translation import ugettext as _
+
+try:
+    basestring
+except NameError:  # Python 3 doesn't have basestring
+    basestring = str
+
+try:
+    long
+except NameError:  # Python 3 doesn't have long
+    long = int
 
 # Python 2.3 compatibility
 try:
@@ -46,17 +59,17 @@ def parse_tag_input(input):
     i = iter(input)
     try:
         while 1:
-            c = i.next()
+            c = next(i)
             if c == u'"':
                 if buffer:
                     to_be_split.append(u''.join(buffer))
                     buffer = []
                 # Find the matching quote
                 open_quote = True
-                c = i.next()
+                c = next(i)
                 while c != u'"':
                     buffer.append(c)
-                    c = i.next()
+                    c = next(i)
                 if buffer:
                     word = u''.join(buffer).strip()
                     if word:
@@ -167,18 +180,18 @@ def get_tag_list(tags):
         return [tags]
     elif isinstance(tags, QuerySet) and tags.model is Tag:
         return tags
-    elif isinstance(tags, types.StringTypes):
+    elif isinstance(tags, basestring):
         return Tag.objects.filter(name__in=parse_tag_input(tags))
-    elif isinstance(tags, (types.ListType, types.TupleType)):
+    elif isinstance(tags, (list, set, tuple)):
         if len(tags) == 0:
             return tags
         contents = set()
         for item in tags:
-            if isinstance(item, types.StringTypes):
+            if isinstance(item, basestring):
                 contents.add('string')
             elif isinstance(item, Tag):
                 contents.add('tag')
-            elif isinstance(item, (types.IntType, types.LongType)):
+            elif isinstance(item, (int, long)):
                 contents.add('int')
         if len(contents) == 1:
             if 'string' in contents:
@@ -209,9 +222,9 @@ def get_tag(tag):
         return tag
 
     try:
-        if isinstance(tag, types.StringTypes):
+        if isinstance(tag, basestring):
             return Tag.objects.get(name=tag)
-        elif isinstance(tag, (types.IntType, types.LongType)):
+        elif isinstance(tag, (int, long)):
             return Tag.objects.get(id=tag)
     except Tag.DoesNotExist:
         pass
