@@ -3,6 +3,7 @@
 from django import forms
 from django.db.models import Q
 from django.test import TestCase
+from django.template import engines
 from tagging.forms import TagField
 from tagging.models import Tag, TaggedItem
 from tagging.tests.models import Article, Link, Perch, Parrot, FormTest, FormTestNull
@@ -922,3 +923,22 @@ class TestTagFieldInForms(TestCase):
             raise e
         else:
             raise self.failureException('a ValidationError exception was supposed to have been raised.')
+
+
+class TemplateTagTestCase(TestCase):
+    def test_smoke(self):
+        # Create a tag on an instance of something.
+        perch = Perch.objects.create(size=10)
+        Tag.objects.add_tag(perch, 'foo')
+
+        django_engine = engines['django']
+        template = django_engine.from_string(
+            '{% load tagging_tags %}{% tags_for_object perch as tags%}{{ tags }}',
+        )
+
+        # Render something. This test is really about making sure there is
+        # nothing obviously wrong with templatetags file.
+        self.assertEqual(
+            template.render({'perch': perch}),
+            '[&lt;Tag: foo&gt;]',
+        )
