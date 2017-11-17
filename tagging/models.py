@@ -1,22 +1,21 @@
 """
 Models and managers for generic tagging.
 """
-# Python 2.3 compatibility
-try:
-    set
-except NameError:
-    from sets import Set as set
 
-from django.contrib.contenttypes import generic
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.conf import settings
 
 from django.db import connection, models
-from django.db.models.query import QuerySet
 from django.utils.translation import ugettext_lazy as _
 
 from tagging.settings import DEFAULT_FORCE_LOWERCASE_TAGS
-from tagging.utils import calculate_cloud, get_tag_list, get_queryset_and_model, parse_tag_input
+from tagging.utils import (
+    calculate_cloud,
+    get_tag_list,
+    get_queryset_and_model,
+    parse_tag_input,
+)
 from tagging.utils import LOGARITHMIC
 
 qn = connection.ops.quote_name
@@ -24,6 +23,7 @@ qn = connection.ops.quote_name
 ############
 # Managers #
 ############
+
 
 class TagManager(models.Manager):
     def update_tags(self, obj, tag_names):
@@ -474,6 +474,9 @@ class Tag(models.Model):
     def __unicode__(self):
         return self.name
 
+    def __str__(self):
+        return self.__unicode__()
+
 class TaggedItem(models.Model):
     """
     Holds the relationship between a tag and the item being tagged.
@@ -481,7 +484,7 @@ class TaggedItem(models.Model):
     tag          = models.ForeignKey(Tag, verbose_name=_('tag'), related_name='items')
     content_type = models.ForeignKey(ContentType, verbose_name=_('content type'))
     object_id    = models.PositiveIntegerField(_('object id'), db_index=True)
-    object       = generic.GenericForeignKey('content_type', 'object_id')
+    object       = GenericForeignKey('content_type', 'object_id')
 
     objects = TaggedItemManager()
 
