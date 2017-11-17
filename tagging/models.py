@@ -474,6 +474,9 @@ class Tag(models.Model):
     def __unicode__(self):
         return self.name
 
+    def __str__(self):
+        return self.__unicode__()
+
 class TaggedItem(models.Model):
     """
     Holds the relationship between a tag and the item being tagged.
