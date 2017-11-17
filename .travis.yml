@@ -4,8 +4,8 @@ python:
 env:
   - TOX_ENV=py27-django18
   - TOX_ENV=py27-django111
-  - TOX_ENV=py35-django18
-  - TOX_ENV=py35-django111
+  # - TOX_ENV=py35-django18
+  # - TOX_ENV=py35-django111
 install:
   - pip install tox
 notifications:
