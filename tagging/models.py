@@ -395,65 +395,6 @@ class TaggedItemManager(models.Manager):
         else:
             return model._default_manager.none()
 
-    def get_related(self, obj, queryset_or_model, num=None):
-        """
-        Retrieve a list of instances of the specified model which share
-        tags with the model instance ``obj``, ordered by the number of
-        shared tags in descending order.
-
-        If ``num`` is given, a maximum of ``num`` instances will be
-        returned.
-        """
-        queryset, model = get_queryset_and_model(queryset_or_model)
-        model_table = qn(model._meta.db_table)
-        content_type = ContentType.objects.get_for_model(obj)
-        related_content_type = ContentType.objects.get_for_model(model)
-        query = """
-        SELECT %(model_pk)s, COUNT(related_tagged_item.object_id) AS %(count)s
-        FROM %(model)s, %(tagged_item)s, %(tag)s, %(tagged_item)s related_tagged_item
-        WHERE %(tagged_item)s.object_id = %%s
-          AND %(tagged_item)s.content_type_id = %(content_type_id)s
-          AND %(tag)s.id = %(tagged_item)s.tag_id
-          AND related_tagged_item.content_type_id = %(related_content_type_id)s
-          AND related_tagged_item.tag_id = %(tagged_item)s.tag_id
-          AND %(model_pk)s = related_tagged_item.object_id"""
-        if content_type.pk == related_content_type.pk:
-            # Exclude the given instance itself if determining related
-            # instances for the same model.
-            query += """
-          AND related_tagged_item.object_id != %(tagged_item)s.object_id"""
-        query += """
-        GROUP BY %(model_pk)s
-        ORDER BY %(count)s DESC
-        %(limit_offset)s"""
-        query = query % {
-            'model_pk': '%s.%s' % (model_table, qn(model._meta.pk.column)),
-            'count': qn('count'),
-            'model': model_table,
-            'tagged_item': qn(self.model._meta.db_table),
-            'tag': qn(self.model._meta.get_field('tag').rel.to._meta.db_table),
-            'content_type_id': content_type.pk,
-            'related_content_type_id': related_content_type.pk,
-            # Hardcoding this for now just to get tests working again - this
-            # should now be handled by the query object.
-            'limit_offset': num is not None and 'LIMIT %s' or '',
-        }
-
-        cursor = connection.cursor()
-        params = [obj.pk]
-        if num is not None:
-            params.append(num)
-        cursor.execute(query, params)
-        object_ids = [row[0] for row in cursor.fetchall()]
-        if len(object_ids) > 0:
-            # Use in_bulk here instead of an id__in lookup, because id__in would
-            # clobber the ordering.
-            object_dict = queryset.in_bulk(object_ids)
-            return [object_dict[object_id] for object_id in object_ids \
-                    if object_id in object_dict]
-        else:
-            return []
-
 ##########
 # Models #
 ##########
