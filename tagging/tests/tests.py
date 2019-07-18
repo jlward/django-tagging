@@ -714,65 +714,6 @@ class TestGetTaggedObjectsByModel(TestCase):
         parrots = TaggedItem.objects.get_union_by_model(Parrot, [])
         self.assertEquals(len(parrots), 0)
 
-class TestGetRelatedTaggedItems(TestCase):
-    def setUp(self):
-        parrot_details = (
-            ('pining for the fjords', 9, True,  'foo bar'),
-            ('passed on',             6, False, 'bar baz ter'),
-            ('no more',               4, True,  'foo ter'),
-            ('late',                  2, False, 'bar ter'),
-        )
-
-        for state, perch_size, perch_smelly, tags in parrot_details:
-            perch = Perch.objects.create(size=perch_size, smelly=perch_smelly)
-            parrot = Parrot.objects.create(state=state, perch=perch)
-            Tag.objects.update_tags(parrot, tags)
-
-        self.l1 = Link.objects.create(name='link 1')
-        Tag.objects.update_tags(self.l1, 'tag1 tag2 tag3 tag4 tag5')
-        self.l2 = Link.objects.create(name='link 2')
-        Tag.objects.update_tags(self.l2, 'tag1 tag2 tag3')
-        self.l3 = Link.objects.create(name='link 3')
-        Tag.objects.update_tags(self.l3, 'tag1')
-        self.l4 = Link.objects.create(name='link 4')
-
-        self.a1 = Article.objects.create(name='article 1')
-        Tag.objects.update_tags(self.a1, 'tag1 tag2 tag3 tag4')
-
-    def test_get_related_objects_of_same_model(self):
-        related_objects = TaggedItem.objects.get_related(self.l1, Link)
-        self.assertEquals(len(related_objects), 2)
-        self.failUnless(self.l2 in related_objects)
-        self.failUnless(self.l3 in related_objects)
-
-        related_objects = TaggedItem.objects.get_related(self.l4, Link)
-        self.assertEquals(len(related_objects), 0)
-
-    def test_get_related_objects_of_same_model_limited_number_of_results(self):
-        # This fails on Oracle because it has no support for a 'LIMIT' clause.
-        # See http://asktom.oracle.com/pls/asktom/f?p=100:11:0::::P11_QUESTION_ID:127412348064
-
-        # ask for no more than 1 result
-        related_objects = TaggedItem.objects.get_related(self.l1, Link, num=1)
-        self.assertEquals(len(related_objects), 1)
-        self.failUnless(self.l2 in related_objects)
-
-    def test_get_related_objects_of_same_model_limit_related_items(self):
-        related_objects = TaggedItem.objects.get_related(self.l1, Link.objects.exclude(name='link 3'))
-        self.assertEquals(len(related_objects), 1)
-        self.failUnless(self.l2 in related_objects)
-
-    def test_get_related_objects_of_different_model(self):
-        related_objects = TaggedItem.objects.get_related(self.a1, Link)
-        self.assertEquals(len(related_objects), 3)
-        self.failUnless(self.l1 in related_objects)
-        self.failUnless(self.l2 in related_objects)
-        self.failUnless(self.l3 in related_objects)
-
-        Tag.objects.update_tags(self.a1, 'tag6')
-        related_objects = TaggedItem.objects.get_related(self.a1, Link)
-        self.assertEquals(len(related_objects), 0)
-
 class TestTagUsageForQuerySet(TestCase):
     def setUp(self):
         parrot_details = (
