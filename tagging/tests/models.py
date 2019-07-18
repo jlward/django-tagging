@@ -8,7 +8,7 @@ class Perch(models.Model):
 
 class Parrot(models.Model):
     state = models.CharField(max_length=50)
-    perch = models.ForeignKey(Perch, null=True)
+    perch = models.ForeignKey(Perch, null=True, on_delete=models.CASCADE)
 
     def __unicode__(self):
         return self.state
